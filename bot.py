@@ -208,7 +208,7 @@ while True:
             unfollow_thread.start()
 
     # This toggle value is simply to make sure it only unfollows once on even days
-    if datetime.datetime.today().day - 1 % 2 == 0 and not toggle:
+    if (datetime.datetime.today().day - 1) % 2 == 0 and not toggle:
         toggle = True
 
     # Wait a random amount of time until posting
