@@ -131,7 +131,7 @@ class Bot:
                 try:
                     api.create_friendship(user.screen_name)
                 except:
-                    print('Failed to follow {} after {} users'.format(account, j))
+                    print('Failed to follow {} after {} users'.format(user.screen_name, j))
                     break
 
     # This method unfollows users who do not follow back
