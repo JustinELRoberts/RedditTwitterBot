@@ -152,15 +152,17 @@ class Bot:
             # Check to see if they follow the bot
             for user in api._lookup_friendships(user_ids):
                 if not user.is_followed_by:
-                    try:
-                        # Unfollow
-                        api.destroy_friendship(user.id)
-                    except tweepy.error.TweepError:
-                        print('Error unfollowing.')
-                        break
+                    # Prevent Twitter from revoking the token for "mass unfollowing"
+                    if random.uniform(0, 1) <= 0.75:
+                        try:
+                            # Unfollow
+                            api.destroy_friendship(user.id)
+                        except tweepy.error.TweepError:
+                            print('Error unfollowing.')
+                            break
 
                 # This is to prevent Twitter from revoking the token for "mass unfollowing"
-                # However, I'm still not sure if it will always work.
+                # However, I don't believe it always works
                 # TODO: Find a more reliable method for unfollowing users
                 time.sleep(random.randrange(10, 120))
 
@@ -195,21 +197,23 @@ BotName = Bot('BotName',
 bots = [BotName]
 
 
-# Boolean used to unfollow once every other day
+# Boolean used to unfollow once every day
 toggle = False
+day = datetime.datetime.today().day
 
 # Indefinitely run bots
 while True:
     # Unfollow users I follow that don't follow me back in a new thread every other day.
-    if datetime.datetime.today().day % 2 == 0 and toggle:
+    if toggle:
         toggle = False
         for bot in bots:
             unfollow_thread = threading.Thread(target=bot.unfollow)
             unfollow_thread.start()
 
     # This toggle value is simply to make sure it only unfollows once on even days
-    if (datetime.datetime.today().day - 1) % 2 == 0 and not toggle:
+    if day != datetime.datetime.today().day and not toggle:
         toggle = True
+        day = datetime.datetime.today().day
 
     # Wait a random amount of time until posting
     pause_length = random.randrange(3600 * 2, 3600 * 12)
