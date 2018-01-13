@@ -17,6 +17,9 @@ class Bot:
         # Twitter accounts to use to follow users
         self.accounts = similar_accounts
 
+        # To prevent revoking of tokens. It is explained better later
+        self.toggle = False
+
         # Self explanatory
         self.reddit_id = reddit_id
         self.reddit_secret = reddit_secret
@@ -136,6 +139,10 @@ class Bot:
 
     # This method unfollows users who do not follow back
     def unfollow(self):
+        # This boolean will prevent following and unfollowing to take place simultaneously.
+        # I believe this is what Twitter has been revoking my tokens for.
+        self.toggle = True
+
         # Create the OAuth instance
         auth = tweepy.OAuthHandler(self.twitter_key, self.twitter_secret)
         auth.set_access_token(self.twitter_token, self.twitter_token_secret)
@@ -153,18 +160,19 @@ class Bot:
             for user in api._lookup_friendships(user_ids):
                 if not user.is_followed_by:
                     # Prevent Twitter from revoking the token for "mass unfollowing"
-                    if random.uniform(0, 1) <= 0.75:
-                        try:
-                            # Unfollow
-                            api.destroy_friendship(user.id)
-                        except tweepy.error.TweepError:
-                            print('Error unfollowing.')
-                            break
+                    try:
+                        # Unfollow
+                        api.destroy_friendship(user.id)
 
-                # This is to prevent Twitter from revoking the token for "mass unfollowing"
-                # However, I don't believe it always works
+                        # This is to prevent Twitter from revoking the token for "mass unfollowing"
+                        time.sleep(random.randrange(10, 120))
+
+                    except tweepy.error.TweepError:
+                        print('Error unfollowing.')
+                        break
+        self.toggle = False
+
                 # TODO: Find a more reliable method for unfollowing users
-                time.sleep(random.randrange(10, 120))
 
 
     # This method fills the directory, posts, and follows
@@ -179,9 +187,12 @@ class Bot:
         # Post
         self.post()
 
-        # Follow some users in a seperate thread
-        follow_thread = threading.Thread(target=self.follow)
-        follow_thread.start()
+        # Only follow user if we aren't currently unfollowing
+        if self.toggle is False:
+            # Follow some users in a seperate thread if we are not currently unfollowing
+            # I did this because Twitter did not like us doing both simultaneously
+            follow_thread = threading.Thread(target=self.follow)
+            follow_thread.start()
 
 
 # Initialize bots
