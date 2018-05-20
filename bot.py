@@ -216,9 +216,9 @@ BotName = Bot('BotName',
 bots = [BotName]
 
 
-# Boolean used to unfollow once every day
-toggle = False
-day = datetime.datetime.today().day
+# # Boolean used to unfollow once every day
+# toggle = False
+# day = datetime.datetime.today().day
 
 # Indefinitely run bots
 while True:
