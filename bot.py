@@ -70,6 +70,10 @@ class Bot:
                             elif imghdr.what(self.path + submission.title) is None:
                                 os.remove(self.path + submission.title)
 
+                            # Also delete posts which exceed tweepy limit (3.072 Mb)
+                            elif os.path.getsize(self.path + submission.title) >= 3072000:
+                                os.remove(self.path + submission.title)
+
                             # If it isn't deleted, use the correct file extension
                             else:
                                 os.rename(self.path + submission.title, self.path + submission.title +
